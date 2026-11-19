@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
-import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/widgets/experience_card.dart';
 
 class MyHomePage extends StatelessWidget {
@@ -10,9 +9,10 @@ class MyHomePage extends StatelessWidget {
   final String kelas = "PBP A";
 
   final List<ItemHomepage> items = [
-    ItemHomepage("Lihat Experience", Icons.folder, Colors.indigo),
-    ItemHomepage("Tambah Experience", Icons.add_circle, Colors.deepPurple),
-    ItemHomepage("Logout", Icons.logout, Colors.teal),
+    ItemHomepage("Lihat Experience", Icons.folder, const Color(0xFFF48FB1)),
+    ItemHomepage("Tambah Experience", Icons.add_circle, const Color(0xFFFFD54F)),
+    ItemHomepage("Logout", Icons.logout, const Color(0xFFF8BBD0)),
+    ItemHomepage("Tambah Volunteering", Icons.volunteer_activism, const Color(0xFFFFE082)),
   ];
   
   @override
