@@ -10,11 +10,24 @@ class MyHomePage extends StatelessWidget {
 
   final List<ItemHomepage> items = [
     ItemHomepage("Lihat Experience", Icons.folder, const Color(0xFFF48FB1)),
-    ItemHomepage("Tambah Experience", Icons.add_circle, const Color(0xFFFFD54F)),
+    ItemHomepage(
+      "Tambah Experience",
+      Icons.add_circle,
+      const Color(0xFFFFD54F),
+    ),
     ItemHomepage("Logout", Icons.logout, const Color(0xFFF8BBD0)),
-    ItemHomepage("Tambah Volunteering", Icons.volunteer_activism, const Color(0xFFFFE082)),
+    ItemHomepage(
+      "Tambah Volunteering",
+      Icons.volunteer_activism,
+      const Color(0xFFFFE082),
+    ),
+    ItemHomepage(
+      "Lihat Volunteering",
+      Icons.volunteer_activism,
+      const Color(0xFFFFB74D),
+    ),
   ];
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,61 +35,53 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'MyPortfolio',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                InfoCard(title: 'NPM', content: npm),
-                InfoCard(title: 'Name', content: nama),
-                InfoCard(title: 'Class', content: kelas),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            Center(
-              child: Column(
+
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 16.0),
-                    child: Text(
-                      'Selamat datang di MyPortfolio Mobile!',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                  ),
-                  GridView.count(
-                    primary: true,
-                    padding: const EdgeInsets.all(20),
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    crossAxisCount: 3,
-                    shrinkWrap: true,
-                    children: items.map((ItemHomepage item) {
-                      return ItemCard(item);
-                    }).toList(),
-                  ),
+                  InfoCard(title: 'NPM', content: npm),
+                  InfoCard(title: 'Name', content: nama),
+                  InfoCard(title: 'Class', content: kelas),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16.0),
+              const Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Text(
+                  'Selamat datang di MyPortfolio Mobile!',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              GridView.count(
+                primary: false,
+                padding: const EdgeInsets.all(20),
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: items.map((ItemHomepage item) {
+                  return ItemCard(item);
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
 }
 
 class InfoCard extends StatelessWidget {
@@ -98,10 +103,7 @@ class InfoCard extends StatelessWidget {
         // Menyusun teks title dan content secara vertikal.
         child: Column(
           children: [
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8.0),
             Text(content),
           ],

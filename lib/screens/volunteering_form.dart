@@ -1,6 +1,10 @@
-
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:myportofolio_mobile/models/volunteering.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
+import 'package:provider/provider.dart';
 
 class VolunteeringFormPage extends StatefulWidget {
   const VolunteeringFormPage({super.key});
@@ -18,6 +22,7 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
 
   String _category = 'volunteer';
   bool _isOngoing = true;
+  bool _isSubmitting = false;
   DateTime? _endedAt;
 
   final List<String> _categories = [
@@ -29,12 +34,10 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
     'freelance',
   ];
 
-  // Mengubah DateTime menjadi format YYYY-MM-DD.
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  // Membuka date picker untuk memilih tanggal selesai.
   Future<void> _selectEndDate() async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -50,41 +53,48 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
     }
   }
 
-  // Menampilkan ringkasan data setelah seluruh input valid.
-  void _showSummary() {
-    if (_formKey.currentState!.validate()) {
-      showDialog(
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final allowed = await ensureLoggedIn(context);
+    if (!mounted || !allowed) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final token = context.read<AuthState>().token;
+
+      if (token == null) {
+        throw Exception('Token autentikasi tidak ditemukan.');
+      }
+
+      final volunteering = Volunteering(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _category,
+        thumbnail: _thumbnailController.text.trim(),
+        endedAt: _isOngoing ? null : _endedAt,
+      );
+
+      await context.read<ApiClient>().createVolunteering(
+        volunteering,
+        token: token,
+      );
+
+      if (!mounted) return;
+
+      await showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return AlertDialog(
-            title: const Text('Volunteering berhasil ditambahkan!'),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Nama Kegiatan: ${_titleController.text.trim()}'),
-                  const SizedBox(height: 8),
-                  Text('Deskripsi: ${_descriptionController.text.trim()}'),
-                  const SizedBox(height: 8),
-                  Text('Kategori: $_category'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Thumbnail: ${_thumbnailController.text.trim().isEmpty ? "Tidak ada" : _thumbnailController.text.trim()}',
-                  ),
-                  const SizedBox(height: 8),
-                  Text('Status: ${_isOngoing ? "Masih berlangsung" : "Selesai"}'),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tanggal Selesai: ${_endedAt == null ? "Belum diisi" : _formatDate(_endedAt!)}',
-                  ),
-                ],
-              ),
-            ),
+            title: const Text('Berhasil!'),
+            content: const Text('Data volunteering berhasil ditambahkan.'),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pop(dialogContext);
                 },
                 child: const Text('Tutup'),
               ),
@@ -92,6 +102,26 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
           );
         },
       );
+
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menambahkan volunteering: $e')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Terjadi kesalahan: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
   }
 
@@ -119,7 +149,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // === Nama Kegiatan ===
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: TextFormField(
@@ -139,8 +168,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                   },
                 ),
               ),
-
-              // === Deskripsi ===
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: TextFormField(
@@ -161,8 +188,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                   },
                 ),
               ),
-
-              // === Kategori ===
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: DropdownButtonFormField<String>(
@@ -194,8 +219,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                   },
                 ),
               ),
-
-              // === Thumbnail ===
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: TextFormField(
@@ -222,8 +245,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                   },
                 ),
               ),
-
-              // === Status Kegiatan ===
               CheckboxListTile(
                 contentPadding: EdgeInsets.zero,
                 title: const Text('Kegiatan masih berlangsung'),
@@ -239,8 +260,6 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                 },
                 controlAffinity: ListTileControlAffinity.leading,
               ),
-
-              // === Tanggal Selesai ===
               if (!_isOngoing)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
@@ -264,23 +283,22 @@ class _VolunteeringFormPageState extends State<VolunteeringFormPage> {
                     ],
                   ),
                 ),
-
-              // === Tombol Simpan ===
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ButtonStyle(
-                    backgroundColor:
-                        WidgetStateProperty.all(Colors.indigo),
+                    backgroundColor: WidgetStateProperty.all(Colors.indigo),
                     padding: WidgetStateProperty.all(
                       const EdgeInsets.symmetric(vertical: 14),
                     ),
                   ),
-                  onPressed: _showSummary,
-                  child: const Text(
-                    'Simpan',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  onPressed: _isSubmitting ? null : _submit,
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Simpan',
+                          style: TextStyle(color: Colors.white),
+                        ),
                 ),
               ),
             ],
